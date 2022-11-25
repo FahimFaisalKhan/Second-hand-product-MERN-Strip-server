@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Fahim Faisal",
+    "email": "seller1@gmail.com",
+    "role": "seller",
+    "verified": true
+  },
+  {
+    "name": "Karim",
+    "email": "fahimfaisal@gmail.com",
+    "role": "seller",
+    "verified": true
+  }
+]

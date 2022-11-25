@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { MongoClient, ServerApiVersion } from "mongodb";
+import { MongoClient, ObjectId, ServerApiVersion } from "mongodb";
 
 dotenv.config();
 const app = express();
@@ -46,28 +46,73 @@ try {
     res.send(result);
   });
 
+  app.get("/myProducts", async (req, res) => {
+    const email = req.query.email;
+
+    const result = await productsTable.find({ sellerEmail: email }).toArray();
+
+    res.send(result);
+  });
+
+  app.post("/addProducts", async (req, res) => {
+    const product = req.body;
+    const result = await productsTable.insertOne({
+      ...product,
+      status: "available",
+      advertised: false,
+    });
+
+    res.send(result);
+  });
+
+  app.delete("/deleteProduct", async (req, res) => {
+    const id = req.query.id;
+
+    const result = await productsTable.deleteOne({ _id: ObjectId(id) });
+    res.send(result);
+  });
+  app.put("/advertiseProduct", async (req, res) => {
+    const id = req.query.id;
+
+    const filter = { _id: ObjectId(id) };
+    const updatedDoc = {
+      $set: {
+        advertised: true,
+      },
+    };
+    const options = { upsert: true };
+
+    const result = await productsTable.updateOne(filter, updatedDoc, options);
+
+    res.send(result);
+  });
   //HANDLING USERS
 
   app.post("/users", async (req, res) => {
     const user = req.body;
-
+    user.email = user.email.toLowerCase();
     const userExist = await usersTable.findOne({
-      email: { $regex: new RegExp(req.body.email, "i") },
+      email: req.body.email,
     });
     let result;
     console.log(user, userExist);
     if (!userExist) {
       result = await usersTable.insertOne(user);
     } else {
-      await usersTable.updateOne(
-        { email: { $regex: new RegExp(req.body.email, "i") } },
-        {
-          $set: {
-            role: "buyer",
+      const social = req.query.social;
+
+      if (social === "true") {
+        await usersTable.updateOne(
+          { email: req.body.email },
+          {
+            $set: {
+              role: "buyer",
+            },
           },
-        },
-        { upsert: true }
-      );
+          { upsert: true }
+        );
+      }
+
       result = { insertedCound: 0, acknowledged: true };
     }
 
@@ -77,9 +122,26 @@ try {
   app.get("/user/getSellerName", async (req, res) => {
     const email = req.query.email;
 
-    const result = await usersTable.findOne({ role: "seller", email: email });
+    const result = await usersTable.findOne({
+      role: "seller",
+      email: email,
+    });
 
     res.send(result);
+  });
+
+  app.get("/user/getRole", async (req, res) => {
+    const email = req.query.email;
+    console.log(email);
+
+    if (email !== "undefined") {
+      console.log("a");
+      const user = await usersTable.findOne({
+        email: email,
+      });
+
+      res.send(user);
+    }
   });
 } catch (err) {
   console.log(err.message);
