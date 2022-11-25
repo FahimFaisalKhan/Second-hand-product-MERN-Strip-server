@@ -51,7 +51,25 @@ try {
   app.post("/users", async (req, res) => {
     const user = req.body;
 
-    const result = await usersTable.insertOne(user);
+    const userExist = await usersTable.findOne({
+      email: { $regex: new RegExp(req.body.email, "i") },
+    });
+    let result;
+    console.log(user, userExist);
+    if (!userExist) {
+      result = await usersTable.insertOne(user);
+    } else {
+      await usersTable.updateOne(
+        { email: { $regex: new RegExp(req.body.email, "i") } },
+        {
+          $set: {
+            role: "buyer",
+          },
+        },
+        { upsert: true }
+      );
+      result = { insertedCound: 0, acknowledged: true };
+    }
 
     res.send(result);
   });
