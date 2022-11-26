@@ -1,20 +1,30 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
+import dotenv, { config } from "dotenv";
 import { MongoClient, ObjectId, ServerApiVersion } from "mongodb";
 import Stripe from "stripe";
+import { initializeApp, applicationDefault } from "firebase-admin/app";
+import firebase from "firebase-admin";
+import { getAuth } from "firebase-admin/auth";
 
+import serviceKey from "./serviceKey.json" assert { type: "json" };
 const stripe = new Stripe(
   "sk_test_51M6B8WJadxoSok6rrk4UgBHTeA4efuB6IeZpjqogumqAXtAuRMOh6bXSoMqsqB49azRy3gSJxWPP0myOqT21SC2200a1fhFKzu"
 );
-const YOUR_DOMAIN = "http://localhost:3000";
+const defaultApp = initializeApp({
+  credential: firebase.credential.cert(serviceKey),
+});
 dotenv.config();
 const app = express();
 
 const port = process.env.PORT || 5000;
 app.use(express.json());
 app.use(cors());
-
+const defaultAuth = getAuth(defaultApp);
+// defaultAuth.getUser()
+// TODO: perform getUser and deletUser method on defaultAuth with the goal of deleting an user by addmin, remember to configuser secretKey json to env variables,
+//   also TODO: 1. logout user in privateroute if he tries to access unauthorized roots.
+//IMPORTANT: use nodemon --experimental-json-modules  index.js instead of nodemon index.js
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@mongobasics-cluster.xxxwrvw.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
@@ -28,6 +38,8 @@ const usersTable = client.db("Bechakena-Base").collection("users");
 const bookingTable = client.db("Bechakena-Base").collection("bookings");
 
 try {
+  //TRY
+
   //HANDLE STRIPE
 
   app.post("/create-payment-intent", async (req, res) => {
@@ -176,6 +188,21 @@ try {
 
       res.send(user);
     }
+  });
+
+  app.get("/user/sellers", async (req, res) => {
+    const result = await usersTable.find({ role: "seller" }).toArray();
+    res.send(result);
+  });
+  app.post("/user/seller/delete", async (req, res) => {
+    const auth = req.body.auth;
+    const email = req.body.email;
+    const userRecord = await defaultAuth.getUserByEmail(email);
+    console.log(userRecord);
+    // auth
+    //   .getUserByEmail(email)
+    //   .then((userRecord) => console.log(userRecord))
+    //   .catch((err) => console.log(err.message));
   });
 
   //HANDLE BOOKINGS
