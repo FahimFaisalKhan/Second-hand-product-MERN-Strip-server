@@ -1,0 +1,113 @@
+[
+  {
+    "name":"Squier. Bullet Mustang HH",
+    "category":"Guitars",
+    "price":199.99,
+    "OriginalPrice":200,
+    
+    "advertised":true,
+    "coverImage":"https://i.ibb.co/ysfphDB/mustang-Front.png",
+    "additionalImages":["https://i.ibb.co/S7pk3PK/mustang-Key.jpg","https://i.ibb.co/yF10k7F/mustang-Frade.webp","https://i.ibb.co/Th5ScGS/mustang-Back.jpg"],
+    "condition":"good",
+    "contactNumber":"018123123",
+    "location":"Dhaka",
+    "description":"Designed for players seeking an affordable, stylish and versatile instrument, the Bullet® Mustang® HH is a tonal powerhouse that punches above its weight. Highlights include a thin and lightweight body, an easy-to-play “C”-shaped neck profile and a short 24” scale length that is great for small hands.",
+    "yearOfPurchase":"2018",
+    "sellerEmail":"seller1@gmail.com",
+    "postDate":"November 24, 2022 at 10 PM",
+    "status":"available"
+  
+  },
+  {
+    "name":"Squier. Classic Vibe Stratocaster '60s",
+    "category":"Guitars",
+    "price":419.19,
+    "OriginalPrice":200,
+    
+    "advertised":true,
+    "coverImage":"https://i.ibb.co/NtVwpsQ/calssic-Vibe-Front.jpg",
+    "additionalImages":["https://i.ibb.co/RB90sY9/classic-Vibe-Back.webp","https://i.ibb.co/4PWYj86/classic-Vive-Frade.webp","https://i.ibb.co/k49X2r9/classic-Vibe-Key.jpg"],
+    "condition":"good",
+    "contactNumber":"018123123",
+    "location":"Dhaka",
+    "description":"Standard 25.5-inch-scale length, 21-fret fingerboard with 9.5-inch radius. 1.65-inch bone nut delivers upgraded string-to-body resonance. 21 Narrow Tall frets are comfortable and easy to play. Outfitted with a Vintage-Style Synchronized Trem.",
+    "yearOfPurchase":"2018",
+    "sellerEmail":"seller1@gmail.com",
+    "postDate":"November 24, 2022 at 10 PM",
+    "status":"available"
+    
+  },
+  {
+    "name":"DW Collector's Shell Pack",
+    "category":"Drums",
+    "price":399,
+    "OriginalPrice":200,
+    
+    "advertised":true,
+    "coverImage":"https://i.ibb.co/WsGKJk9/de-Collectors-Front.webp",
+    "additionalImages":["https://i.ibb.co/Zzqb9Dt/dw-Collectors-Back.webp","https://i.ibb.co/mckZ6ZT/dw-Collectors-Snare.webp"],
+    "condition":"good",
+    "contactNumber":"018123123",
+    "location":"Dhaka",
+    "description":"Bass drums are 7-ply and snare drums are 10-ply (with 6-ply reinforcement hoops). This shell pack features rack toms with Vertical Low Timbre (VLT) - a DW special feature which involves arranging grain patterns of shell plies so the outermost and innermost plies run vertically versus the traditional horizontal.",
+    "yearOfPurchase":"2018",
+    "sellerEmail":"seller1@gmail.com",
+    "postDate":"November 24, 2022 at 10 PM",
+    "status":"available"
+   
+  },
+  {
+    "name":"Tama Starclassic",
+    "category":"Drums",
+    "price":500,
+    "OriginalPrice":200,
+    
+    "advertised":true,
+    "coverImage":"https://i.ibb.co/2tzmCDd/tama-Front.png",
+    "additionalImages":["https://i.ibb.co/NjQPZhd/tamaBack.jpg","https://i.ibb.co/6JSDkF4/tama-Snare.webp"],
+    "condition":"good",
+    "contactNumber":"018123123",
+    "location":"Dhaka",
+    "description":"Starclassic shell design has included drums with various wood types, including pure birch, pure maple, and 'hybrid' bubinga/birch and walnut/birch. Tama's evolution into the hybrid shell has been widely appreciated by drummers due to the complex and expressive sonic properties these hybrid shells produce.",
+    "yearOfPurchase":"2018",
+    "sellerEmail":"fahimfaisal@gmail.com",
+    "postDate":"November 24, 2022 at 10 PM",
+    "status":"available"
+  },
+  {
+    "name":"Steinway & Sons",
+    "category":"Pianos",
+    "price":1100,
+    "OriginalPrice":200,
+    
+    "advertised":true,
+    "coverImage":"https://i.ibb.co/7X9hs29/stein-Way-Front.png",
+    "additionalImages":["https://i.ibb.co/bPPDjFs/stein-Way-Back.webp","https://i.ibb.co/7ySpXL9/steinway-Keys.jpg"],
+    "condition":"good",
+    "contactNumber":"018123123",
+    "location":"Dhaka",
+    "description":"Every Steinway & Sons grand and upright is a masterpiece of craftsmanship and a consummate work of art. Each Steinway, consisting of more than 12,000 individual parts, has its own musical character and is as unique as the individual who plays it.",
+    "yearOfPurchase":"2018",
+    "sellerEmail":"fahimfaisal@gmail.com",
+    "postDate":"November 24, 2022 at 10 PM",
+    "status":"available"
+  },
+  {
+    "name":"Yamaha Clavinova CLP-775",
+    "category":"Pianos",
+    "price":900,
+    "OriginalPrice":200,
+    
+    "advertised":true,
+    "coverImage":"https://i.ibb.co/wKXktqq/yamaha-Front.jpg",
+    "additionalImages":["https://i.ibb.co/gyGkWBT/yamaha-Keys.webp"],
+    "condition":"good",
+    "contactNumber":"018123123",
+    "location":"Dhaka",
+    "description":"The Yamaha Clavinova CLP-775 represents a new era in digital piano keyboard actions with its GrandTouch Keyboard action, featuring an extended key-to-fulcrum length for a balanced, more playable feel from the tip of each key to the very back, and Linear Graded Hammers, which are calibrated to simulate the differing .",
+    "yearOfPurchase":"2018",
+    "sellerEmail":"fahimfaisal@gmail.com",
+    "postDate":"November 24, 2022 at 10 PM",
+    "status":"available"
+  }
+]

@@ -2,7 +2,12 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { MongoClient, ObjectId, ServerApiVersion } from "mongodb";
+import Stripe from "stripe";
 
+const stripe = new Stripe(
+  "sk_test_51M6B8WJadxoSok6rrk4UgBHTeA4efuB6IeZpjqogumqAXtAuRMOh6bXSoMqsqB49azRy3gSJxWPP0myOqT21SC2200a1fhFKzu"
+);
+const YOUR_DOMAIN = "http://localhost:3000";
 dotenv.config();
 const app = express();
 
@@ -20,8 +25,39 @@ const client = new MongoClient(uri, {
 const productsTable = client.db("Bechakena-Base").collection("products");
 const usersTable = client.db("Bechakena-Base").collection("users");
 
+const bookingTable = client.db("Bechakena-Base").collection("bookings");
+
 try {
+  //HANDLE STRIPE
+
+  app.post("/create-payment-intent", async (req, res) => {
+    const { price } = req.body;
+    const p = parseFloat(price) * 100;
+    // Create a PaymentIntent with the order amount and currency
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: p,
+
+      currency: "usd",
+      automatic_payment_methods: {
+        enabled: true,
+      },
+      statement_descriptor: "Custom descriptor",
+    });
+
+    res.send({
+      clientSecret: paymentIntent.client_secret,
+    });
+  });
   //HANDLING PRODUCTS
+
+  app.get("/getProductById/:pId", async (req, res) => {
+    const pId = req.params.pId;
+    console.log(req.params);
+
+    const result = await productsTable.findOne({ _id: ObjectId(pId) });
+
+    res.send(result);
+  });
 
   app.get("/mostBookedProducts", async (req, res) => {
     const result = await productsTable.find({}).limit(4).toArray();
@@ -95,7 +131,7 @@ try {
       email: req.body.email,
     });
     let result;
-    console.log(user, userExist);
+
     if (!userExist) {
       result = await usersTable.insertOne(user);
     } else {
@@ -132,16 +168,42 @@ try {
 
   app.get("/user/getRole", async (req, res) => {
     const email = req.query.email;
-    console.log(email);
 
     if (email !== "undefined") {
-      console.log("a");
       const user = await usersTable.findOne({
         email: email,
       });
 
       res.send(user);
     }
+  });
+
+  //HANDLE BOOKINGS
+
+  app.post("/booking", async (req, res) => {
+    const bookingItem = req.body;
+
+    const result = await bookingTable.insertOne(bookingItem);
+    res.send(result);
+  });
+
+  app.get("/booking", async (req, res) => {
+    const email = req.query.email;
+    const result = await bookingTable.find({ buyerEmail: email }).toArray();
+
+    res.send(result);
+  });
+
+  app.get("/bookedProducts", async (req, res) => {
+    const email = req.query.email;
+    console.log(email);
+    const result = await bookingTable
+      .find({ buyerEmail: email }, { projection: { _id: 0, productId: 1 } })
+      .toArray();
+
+    const pIds = result.map((prod) => prod.productId);
+    console.log(pIds);
+    res.send(pIds);
   });
 } catch (err) {
   console.log(err.message);
