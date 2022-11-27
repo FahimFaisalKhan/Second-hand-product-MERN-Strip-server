@@ -7,6 +7,9 @@ import { initializeApp, applicationDefault } from "firebase-admin/app";
 import firebase from "firebase-admin";
 import { getAuth } from "firebase-admin/auth";
 import serviceKey from "./serviceKey.js";
+import jwt from "jsonwebtoken";
+
+import { verifyAdmin, verifySeller, verifyUserJWT } from "./middleWares.js";
 
 const stripe = new Stripe(
   "sk_test_51M6B8WJadxoSok6rrk4UgBHTeA4efuB6IeZpjqogumqAXtAuRMOh6bXSoMqsqB49azRy3gSJxWPP0myOqT21SC2200a1fhFKzu"
@@ -40,11 +43,23 @@ const wishlistTable = client.db("Bechakena-Base").collection("wishList");
 const paymentInfoTable = client.db("Bechakena-Base").collection("paymentInfo");
 
 try {
-  //TRY
+  //HANDLE JWT
+
+  app.post("/jwt", (req, res) => {
+    const email = req.body.email;
+
+    const token = jwt.sign({ email: email }, process.env.JWT_SECRET);
+
+    if (token) {
+      res.send({ accessToken: token });
+    } else {
+      res.send({ message: "Token generation error" });
+    }
+  });
 
   //HANDLE STRIPE
 
-  app.post("/create-payment-intent", async (req, res) => {
+  app.post("/create-payment-intent", verifyUserJWT, async (req, res) => {
     const { price } = req.body;
     const p = parseFloat(price) * 100;
     // Create a PaymentIntent with the order amount and currency
@@ -109,7 +124,7 @@ try {
     res.send(result);
   });
 
-  app.get("/myProducts", async (req, res) => {
+  app.get("/myProducts", verifySeller, async (req, res) => {
     const email = req.query.email;
 
     const result = await productsTable.find({ sellerEmail: email }).toArray();
@@ -117,7 +132,7 @@ try {
     res.send(result);
   });
 
-  app.post("/addProducts", async (req, res) => {
+  app.post("/addProducts", verifySeller, async (req, res) => {
     const product = req.body;
     const result = await productsTable.insertOne({
       ...product,
@@ -128,13 +143,13 @@ try {
     res.send(result);
   });
 
-  app.delete("/deleteProduct", async (req, res) => {
+  app.delete("/deleteProduct", verifySeller, async (req, res) => {
     const id = req.query.id;
 
     const result = await productsTable.deleteOne({ _id: ObjectId(id) });
     res.send(result);
   });
-  app.put("/advertiseProduct", async (req, res) => {
+  app.put("/advertiseProduct", verifySeller, async (req, res) => {
     const id = req.query.id;
 
     const filter = { _id: ObjectId(id) };
@@ -200,19 +215,19 @@ try {
     result = await usersTable.findOne({
       email: email,
     });
-    console.log(result);
+
     res.send(result);
   });
 
-  app.get("/user/sellers", async (req, res) => {
+  app.get("/user/sellers", verifyAdmin, async (req, res) => {
     const result = await usersTable.find({ role: "seller" }).toArray();
     res.send(result);
   });
-  app.get("/user/buyers", async (req, res) => {
+  app.get("/user/buyers", verifyAdmin, async (req, res) => {
     const result = await usersTable.find({ role: "buyer" }).toArray();
     res.send(result);
   });
-  app.post("/user/delete", async (req, res) => {
+  app.post("/user/delete", verifyAdmin, async (req, res) => {
     const email = req.body.email;
     try {
       const userRecord = await defaultAuth.getUserByEmail(email);
@@ -233,7 +248,7 @@ try {
       });
     }
   });
-  app.put("/user/update", async (req, res) => {
+  app.put("/user/update", verifyAdmin, async (req, res) => {
     const email = req.body.email;
 
     const response = await usersTable.updateOne(
@@ -246,14 +261,14 @@ try {
   });
   //HANDLE BOOKINGS
 
-  app.post("/booking", async (req, res) => {
+  app.post("/booking", verifyUserJWT, async (req, res) => {
     const bookingItem = req.body;
 
     const result = await bookingTable.insertOne(bookingItem);
     res.send(result);
   });
 
-  app.get("/booking", async (req, res) => {
+  app.get("/booking", verifyUserJWT, async (req, res) => {
     const email = req.query.email;
     const result = await bookingTable.find({ buyerEmail: email }).toArray();
 
@@ -289,7 +304,7 @@ try {
     res.send(result);
   });
 
-  app.get("/wishList", async (req, res) => {
+  app.get("/wishList", verifyUserJWT, async (req, res) => {
     const customerEmail = req.query.customerEmail;
 
     const wishes = await wishlistTable
@@ -320,7 +335,7 @@ try {
 
 //HANDLE PAYMENT
 
-app.post("/payment", async (req, res) => {
+app.post("/payment", verifyUserJWT, async (req, res) => {
   const pId = req.body.pId;
 
   const paymentId = req.body.paymentId;
