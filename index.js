@@ -36,6 +36,8 @@ const productsTable = client.db("Bechakena-Base").collection("products");
 const usersTable = client.db("Bechakena-Base").collection("users");
 
 const bookingTable = client.db("Bechakena-Base").collection("bookings");
+const wishlistTable = client.db("Bechakena-Base").collection("wishList");
+const paymentInfoTable = client.db("Bechakena-Base").collection("paymentInfo");
 
 try {
   //TRY
@@ -76,7 +78,9 @@ try {
     res.send(result);
   });
   app.get("/advertisedItems", async (req, res) => {
-    const result = await productsTable.find({ advertised: true }).toArray();
+    const result = await productsTable
+      .find({ advertised: true, status: "available" })
+      .toArray();
 
     res.send(result);
   });
@@ -252,9 +256,100 @@ try {
 
     res.send(pIds);
   });
+
+  //HANDLE WISHLIST
+
+  app.post("/wishList", async (req, res) => {
+    const productId = req.body.pId;
+    const customerEmail = req.body.customerEmail;
+
+    const wishedTime = new Date();
+
+    const result = await wishlistTable.insertOne({
+      productId,
+      customerEmail,
+      wishedTime,
+    });
+
+    res.send(result);
+  });
+
+  app.get("/wishList", async (req, res) => {
+    const customerEmail = req.query.customerEmail;
+
+    const wishes = await wishlistTable
+      .find({ customerEmail: customerEmail })
+      .toArray();
+    const wishedIds = wishes.map((wish) => new ObjectId(wish.productId));
+
+    const result = await productsTable
+      .find({ _id: { $in: wishedIds } })
+      .toArray();
+    console.log(result, "aaa");
+    res.send(result);
+  });
+  app.get("/wishedProducts", async (req, res) => {
+    const email = req.query.email;
+
+    const result = await wishlistTable
+      .find({ customerEmail: email }, { projection: { _id: 0, productId: 1 } })
+      .toArray();
+
+    const pIds = result.map((prod) => prod.productId);
+
+    res.send(pIds);
+  });
 } catch (err) {
   console.log(err.message);
 }
+
+//HANDLE PAYMENT
+
+app.post("/payment", async (req, res) => {
+  const pId = req.body.pId;
+
+  const paymentId = req.body.paymentId;
+  const buyerEmail = req.body.buyerEmail;
+  const paymntTime = new Date();
+  const updateProduct = await productsTable.updateOne(
+    { _id: ObjectId(pId) },
+    {
+      $set: {
+        status: "sold",
+        advertised: false,
+      },
+    }
+  );
+
+  const updateBooking = await bookingTable.updateMany(
+    { productId: pId },
+    {
+      $set: {
+        status: "sold",
+      },
+    }
+  );
+
+  console.log(updateBooking);
+
+  if (updateProduct.acknowledged && updateBooking.acknowledged) {
+    const payedProduct = await productsTable.findOne({ _id: ObjectId(pId) });
+
+    const sellerEmail = payedProduct.sellerEmail;
+
+    const sellerInfo = await usersTable.findOne({ email: sellerEmail });
+    const sellerName = sellerInfo.name;
+
+    const result = await paymentInfoTable.insertOne({
+      paymentId,
+      sellerEmail,
+      sellerName,
+      buyerEmail,
+      paymntTime,
+    });
+    res.send(result);
+  }
+});
 
 app.get("/", (req, res) => {
   res.send("server running");
