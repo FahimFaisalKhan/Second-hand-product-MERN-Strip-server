@@ -73,7 +73,10 @@ try {
   });
 
   app.get("/mostBookedProducts", async (req, res) => {
-    const result = await productsTable.find({}).limit(4).toArray();
+    const result = await productsTable
+      .find({ status: "available" })
+      .limit(4)
+      .toArray();
 
     res.send(result);
   });
