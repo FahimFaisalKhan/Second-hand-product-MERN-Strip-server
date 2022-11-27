@@ -86,13 +86,22 @@ try {
   });
 
   app.get("/categoryNames", async (req, res) => {
-    const result = await productsTable.distinct("category");
+    const availableProds = await productsTable
+      .find({ status: "available" })
+      .toArray();
+
+    const cats = availableProds.map((avProd) => avProd.category);
+
+    const result = [...new Set(cats)];
+
     res.send(result);
   });
 
   app.get("/category/:cat", async (req, res) => {
     const cat = req.params.cat;
-    const result = await productsTable.find({ category: cat }).toArray();
+    const result = await productsTable
+      .find({ category: cat, status: "available" })
+      .toArray();
 
     res.send(result);
   });
@@ -183,18 +192,21 @@ try {
 
   app.get("/user/getRole", async (req, res) => {
     const email = req.query.email;
+    let result;
 
-    if (email !== "undefined") {
-      const user = await usersTable.findOne({
-        email: email,
-      });
-
-      res.send(user);
-    }
+    result = await usersTable.findOne({
+      email: email,
+    });
+    console.log(result);
+    res.send(result);
   });
 
   app.get("/user/sellers", async (req, res) => {
     const result = await usersTable.find({ role: "seller" }).toArray();
+    res.send(result);
+  });
+  app.get("/user/buyers", async (req, res) => {
+    const result = await usersTable.find({ role: "buyer" }).toArray();
     res.send(result);
   });
   app.post("/user/delete", async (req, res) => {
@@ -285,7 +297,7 @@ try {
     const result = await productsTable
       .find({ _id: { $in: wishedIds } })
       .toArray();
-    console.log(result, "aaa");
+
     res.send(result);
   });
   app.get("/wishedProducts", async (req, res) => {
@@ -329,8 +341,6 @@ app.post("/payment", async (req, res) => {
       },
     }
   );
-
-  console.log(updateBooking);
 
   if (updateProduct.acknowledged && updateBooking.acknowledged) {
     const payedProduct = await productsTable.findOne({ _id: ObjectId(pId) });
