@@ -6,8 +6,8 @@ import Stripe from "stripe";
 import { initializeApp, applicationDefault } from "firebase-admin/app";
 import firebase from "firebase-admin";
 import { getAuth } from "firebase-admin/auth";
+import serviceKey from "./serviceKey.js";
 
-import serviceKey from "./serviceKey.json" assert { type: "json" };
 const stripe = new Stripe(
   "sk_test_51M6B8WJadxoSok6rrk4UgBHTeA4efuB6IeZpjqogumqAXtAuRMOh6bXSoMqsqB49azRy3gSJxWPP0myOqT21SC2200a1fhFKzu"
 );
@@ -64,7 +64,6 @@ try {
 
   app.get("/getProductById/:pId", async (req, res) => {
     const pId = req.params.pId;
-    console.log(req.params);
 
     const result = await productsTable.findOne({ _id: ObjectId(pId) });
 
@@ -194,17 +193,38 @@ try {
     const result = await usersTable.find({ role: "seller" }).toArray();
     res.send(result);
   });
-  app.post("/user/seller/delete", async (req, res) => {
-    const auth = req.body.auth;
+  app.post("/user/delete", async (req, res) => {
     const email = req.body.email;
-    const userRecord = await defaultAuth.getUserByEmail(email);
-    console.log(userRecord);
-    // auth
-    //   .getUserByEmail(email)
-    //   .then((userRecord) => console.log(userRecord))
-    //   .catch((err) => console.log(err.message));
-  });
+    try {
+      const userRecord = await defaultAuth.getUserByEmail(email);
+      if (userRecord) {
+        defaultAuth
+          .deleteUser(userRecord.uid)
+          .then(() => {
+            console.log("deleted");
+          })
 
+          .catch((err) => console.log(err.message));
+      }
+    } catch (err) {
+      console.log(err.message);
+    } finally {
+      usersTable.deleteOne({ email: email }).then((response) => {
+        res.send(response);
+      });
+    }
+  });
+  app.put("/user/update", async (req, res) => {
+    const email = req.body.email;
+
+    const response = await usersTable.updateOne(
+      { email: email },
+      { $set: { verified: true } },
+      { upsert: true }
+    );
+
+    res.send(response);
+  });
   //HANDLE BOOKINGS
 
   app.post("/booking", async (req, res) => {
@@ -223,13 +243,13 @@ try {
 
   app.get("/bookedProducts", async (req, res) => {
     const email = req.query.email;
-    console.log(email);
+
     const result = await bookingTable
       .find({ buyerEmail: email }, { projection: { _id: 0, productId: 1 } })
       .toArray();
 
     const pIds = result.map((prod) => prod.productId);
-    console.log(pIds);
+
     res.send(pIds);
   });
 } catch (err) {
