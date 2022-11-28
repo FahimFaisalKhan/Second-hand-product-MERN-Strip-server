@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import dotenv, { config } from "dotenv";
+import dotenv from "dotenv";
 import { MongoClient, ObjectId, ServerApiVersion } from "mongodb";
 import Stripe from "stripe";
 import { initializeApp, applicationDefault } from "firebase-admin/app";
@@ -47,6 +47,7 @@ try {
 
   app.post("/jwt", (req, res) => {
     const email = req.body.email;
+    console.log(email);
 
     const token = jwt.sign({ email: email }, process.env.JWT_SECRET);
 
@@ -124,7 +125,7 @@ try {
     res.send(result);
   });
 
-  app.get("/myProducts", verifySeller, async (req, res) => {
+  app.get("/myProducts", verifyUserJWT, verifySeller, async (req, res) => {
     const email = req.query.email;
 
     const result = await productsTable.find({ sellerEmail: email }).toArray();
@@ -132,7 +133,7 @@ try {
     res.send(result);
   });
 
-  app.post("/addProducts", verifySeller, async (req, res) => {
+  app.post("/addProducts", verifyUserJWT, verifySeller, async (req, res) => {
     const product = req.body;
     const result = await productsTable.insertOne({
       ...product,
@@ -143,27 +144,37 @@ try {
     res.send(result);
   });
 
-  app.delete("/deleteProduct", verifySeller, async (req, res) => {
-    const id = req.query.id;
+  app.delete(
+    "/deleteProduct",
+    verifyUserJWT,
+    verifySeller,
+    async (req, res) => {
+      const id = req.query.id;
 
-    const result = await productsTable.deleteOne({ _id: ObjectId(id) });
-    res.send(result);
-  });
-  app.put("/advertiseProduct", verifySeller, async (req, res) => {
-    const id = req.query.id;
+      const result = await productsTable.deleteOne({ _id: ObjectId(id) });
+      res.send(result);
+    }
+  );
+  app.get(
+    "/advertiseProduct",
+    verifyUserJWT,
+    verifySeller,
+    async (req, res) => {
+      const id = req.query.id;
 
-    const filter = { _id: ObjectId(id) };
-    const updatedDoc = {
-      $set: {
-        advertised: true,
-      },
-    };
-    const options = { upsert: true };
+      const filter = { _id: ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          advertised: true,
+        },
+      };
+      const options = { upsert: true };
 
-    const result = await productsTable.updateOne(filter, updatedDoc, options);
+      const result = await productsTable.updateOne(filter, updatedDoc, options);
 
-    res.send(result);
-  });
+      res.send(result);
+    }
+  );
   //HANDLING USERS
 
   app.post("/users", async (req, res) => {
@@ -219,15 +230,16 @@ try {
     res.send(result);
   });
 
-  app.get("/user/sellers", verifyAdmin, async (req, res) => {
+  app.get("/user/sellers", verifyUserJWT, verifyAdmin, async (req, res) => {
     const result = await usersTable.find({ role: "seller" }).toArray();
     res.send(result);
   });
-  app.get("/user/buyers", verifyAdmin, async (req, res) => {
+  app.get("/user/buyers", verifyUserJWT, verifyAdmin, async (req, res) => {
     const result = await usersTable.find({ role: "buyer" }).toArray();
     res.send(result);
   });
-  app.post("/user/delete", verifyAdmin, async (req, res) => {
+  app.delete("/user/delete", verifyUserJWT, verifyAdmin, async (req, res) => {
+    console.log(req.body);
     const email = req.body.email;
     try {
       const userRecord = await defaultAuth.getUserByEmail(email);
@@ -238,7 +250,10 @@ try {
             console.log("deleted");
           })
 
-          .catch((err) => console.log(err.message));
+          .catch((err) => {
+            console.log(err.message);
+            res.status(502);
+          });
       }
     } catch (err) {
       console.log(err.message);
@@ -248,7 +263,7 @@ try {
       });
     }
   });
-  app.put("/user/update", verifyAdmin, async (req, res) => {
+  app.put("/user/update", verifyUserJWT, verifyAdmin, async (req, res) => {
     const email = req.body.email;
 
     const response = await usersTable.updateOne(
@@ -337,7 +352,7 @@ try {
 
 app.post("/payment", verifyUserJWT, async (req, res) => {
   const pId = req.body.pId;
-
+  console.log(pId);
   const paymentId = req.body.paymentId;
   const buyerEmail = req.body.buyerEmail;
   const paymntTime = new Date();

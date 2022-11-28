@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
 import { MongoClient, ObjectId, ServerApiVersion } from "mongodb";
+import dotenv from "dotenv";
+dotenv.config();
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@mongobasics-cluster.xxxwrvw.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
@@ -10,6 +12,8 @@ const client = new MongoClient(uri, {
 // const productsTable = client.db("Bechakena-Base").collection("products");
 const usersTable = client.db("Bechakena-Base").collection("users");
 const verifyUserJWT = (req, res, next) => {
+  console.log(req.body);
+
   const auth = req.headers.authorization;
 
   if (!auth) {
