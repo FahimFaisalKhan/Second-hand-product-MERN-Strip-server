@@ -10,19 +10,17 @@ import serviceKey from "./serviceKey.js";
 import jwt from "jsonwebtoken";
 
 import { verifyAdmin, verifySeller, verifyUserJWT } from "./middleWares.js";
-
-const stripe = new Stripe(
-  "sk_test_51M6B8WJadxoSok6rrk4UgBHTeA4efuB6IeZpjqogumqAXtAuRMOh6bXSoMqsqB49azRy3gSJxWPP0myOqT21SC2200a1fhFKzu"
-);
-const defaultApp = initializeApp({
-  credential: firebase.credential.cert(serviceKey),
-});
 dotenv.config();
 const app = express();
 
 const port = process.env.PORT || 5000;
 app.use(express.json());
 app.use(cors());
+const stripe = new Stripe(process.env.STRIPE_SECRET);
+const defaultApp = initializeApp({
+  credential: firebase.credential.cert(serviceKey),
+});
+
 const defaultAuth = getAuth(defaultApp);
 // defaultAuth.getUser()
 // TODO: perform getUser and deletUser method on defaultAuth with the goal of deleting an user by addmin, remember to configuser secretKey json to env variables,
@@ -60,24 +58,27 @@ try {
 
   //HANDLE STRIPE
 
-  app.post("/create-payment-intent", verifyUserJWT, async (req, res) => {
-    const { price } = req.body;
-    const p = parseFloat(price) * 100;
-    // Create a PaymentIntent with the order amount and currency
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: p,
+  app.post(
+    "/create-payment-intent",
 
-      currency: "usd",
-      automatic_payment_methods: {
-        enabled: true,
-      },
-      statement_descriptor: "Custom descriptor",
-    });
+    verifyUserJWT,
+    async (req, res) => {
+      const { price } = req.body;
+      const p = parseFloat(price) * 100;
 
-    res.send({
-      clientSecret: paymentIntent.client_secret,
-    });
-  });
+      // Create a PaymentIntent with the order amount and currency
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: p,
+
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    }
+  );
   //HANDLING PRODUCTS
 
   app.get("/getProductById/:pId", async (req, res) => {
