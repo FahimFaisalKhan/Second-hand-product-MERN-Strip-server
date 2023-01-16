@@ -8,6 +8,8 @@ import firebase from "firebase-admin";
 import { getAuth } from "firebase-admin/auth";
 import serviceKey from "./serviceKey.js";
 import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
+import Email from "email-templates";
 
 import { verifyAdmin, verifySeller, verifyUserJWT } from "./middleWares.js";
 dotenv.config();
@@ -39,13 +41,14 @@ const usersTable = client.db("Bechakena-Base").collection("users");
 const bookingTable = client.db("Bechakena-Base").collection("bookings");
 const wishlistTable = client.db("Bechakena-Base").collection("wishList");
 const paymentInfoTable = client.db("Bechakena-Base").collection("paymentInfo");
+const faqsTable = client.db("Bechakena-Base").collection("faqs");
+const offersTable = client.db("Bechakena-Base").collection("offers");
 
 try {
   //HANDLE JWT
 
   app.post("/jwt", (req, res) => {
     const email = req.body.email;
-    console.log(email);
 
     const token = jwt.sign({ email: email }, process.env.JWT_SECRET);
 
@@ -240,7 +243,6 @@ try {
     res.send(result);
   });
   app.delete("/user/delete", verifyUserJWT, verifyAdmin, async (req, res) => {
-    console.log(req.body);
     const email = req.body.email;
     try {
       const userRecord = await defaultAuth.getUserByEmail(email);
@@ -286,9 +288,16 @@ try {
 
   app.get("/booking", verifyUserJWT, async (req, res) => {
     const email = req.query.email;
-    const result = await bookingTable.find({ buyerEmail: email }).toArray();
+    const result = await bookingTable
+      .find({ buyerEmail: email, status: "available" })
+      .toArray();
 
     res.send(result);
+  });
+  app.delete("/booking", verifyUserJWT, async (req, res) => {
+    const { bookingId } = req.body;
+    const response = await bookingTable.deleteOne({ _id: ObjectId(bookingId) });
+    res.send(response);
   });
 
   app.get("/bookedProducts", async (req, res) => {
@@ -353,7 +362,7 @@ try {
 
 app.post("/payment", verifyUserJWT, async (req, res) => {
   const pId = req.body.pId;
-  console.log(pId);
+
   const paymentId = req.body.paymentId;
   const buyerEmail = req.body.buyerEmail;
   const paymntTime = new Date();
@@ -393,6 +402,50 @@ app.post("/payment", verifyUserJWT, async (req, res) => {
     });
     res.send(result);
   }
+});
+app.get("/faqs", async (req, res) => {
+  const response = await faqsTable.find({}).toArray();
+
+  res.send(response);
+});
+
+app.post("/email", verifyUserJWT, async (req, res) => {
+  const { query } = req.body;
+  let response;
+  try {
+    // create reusable transporter object using the default SMTP transport
+    let transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: "khanfahimfaisal@gmail.com", // generated ethereal user
+        pass: "uhlpxpvrbgcvnobt", // generated ethereal password
+      },
+    });
+
+    // send mail with defined transport object
+    let info = await transporter.sendMail({
+      from: '"Fred Foo 👻" <khanfahimfaisal@gmail.com>', // sender address
+      to: "khanfahimfaisal@gmail.com", // list of receivers
+      subject: "Customer Query", // Subject line
+      text: `${query}`, // plain text body
+      html: `<b>${query}</b>`, // html body
+    });
+
+    response = { status: "success" };
+  } catch (er) {
+    console.log(er);
+    response = { status: "failed" };
+  }
+
+  res.send(response);
+});
+
+app.get("/offers", async (req, res) => {
+  const response = await offersTable.find({}).toArray();
+
+  res.send(response);
 });
 
 app.get("/", (req, res) => {

@@ -12,8 +12,6 @@ const client = new MongoClient(uri, {
 // const productsTable = client.db("Bechakena-Base").collection("products");
 const usersTable = client.db("Bechakena-Base").collection("users");
 const verifyUserJWT = (req, res, next) => {
-  console.log(req.body);
-
   const auth = req.headers.authorization;
 
   if (!auth) {
@@ -25,7 +23,6 @@ const verifyUserJWT = (req, res, next) => {
       } else {
         req.decoded = decoded;
 
-        console.log(decoded);
         next();
       }
     });
